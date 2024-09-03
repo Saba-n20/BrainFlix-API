@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.route('/videos')
   .get(controller.getAllVideos)
-  .post(controller.addVideoById);  // Ensure POST is correctly defined here
+  .post(controller.addVideoById);  
 
 router.route('/videos/:id')
   .get(controller.getVideoById);
