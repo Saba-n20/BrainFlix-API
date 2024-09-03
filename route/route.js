@@ -10,4 +10,8 @@ router.route('/videos')
 router.route('/videos/:id')
   .get(controller.getVideoById);
 
+// Comment routes
+router.route('/videos/:id/comments')
+  .post(controller.addComment);
+
 export default router;
