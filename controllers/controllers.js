@@ -55,34 +55,3 @@ export const addVideoById = (req, res) => {
   }
 };
 
-export const addComment = (req, res) => {
-    try {
-      const videoId = req.params.id;
-      const { text, author } = req.body;
-  
-      if (!text || !author) {
-        return res.status(400).send('Comment text and author are required');
-      }
-  
-      const video = videos.find(v => v.id === videoId);
-      
-      if (!video) {
-        return res.status(404).send('Video not found');
-      }
-  
-      const newComment = {
-        id: uuidv4(),
-        text,
-        author,
-        date: new Date().toISOString()
-      };
-  
-      video.comments.push(newComment);
-  
-      res.status(201).json(newComment);
-      console.log("Added new comment:", newComment);
-    } catch (err) {
-      console.error('Server error:', err);
-      res.status(500).send('Server error');
-    }
-  };
