@@ -45,10 +45,6 @@ export const getAllVideos = async (req, res) => {
 export const getVideoById = async (req, res) => {
   try {
     const videoId = req.params.id;
-    if (!videoId) {
-      return res.status(400).send('ID is required');
-    }
-
     const videos = await readVideosFromFile();
     const video = videos.find(v => v.id === videoId);
 
@@ -57,9 +53,7 @@ export const getVideoById = async (req, res) => {
     } else {
       res.status(404).send('Video not found');
     }
-
   } catch (err) {
-    console.error('Server error:', err);
     res.status(500).send('Server error');
   }
 };
@@ -67,24 +61,13 @@ export const getVideoById = async (req, res) => {
 // Add a new video
 export const addVideoById = async (req, res) => {
   try {
-    const newVideo = { ...req.body };
-    console.log('Adding video:', newVideo);
-
-    // Generate a unique UUID
-    newVideo.id = uuidv4();
-    console.log('New video ID:', newVideo.id);
-
+    const newVideo = { ...req.body, id: uuidv4() };
     const videos = await readVideosFromFile();
     videos.push(newVideo);
     await writeVideosToFile(videos);
-
     res.status(201).json(newVideo);
-    console.log("Added new video:", newVideo);
   } catch (err) {
-    if (!res.headersSent) {
-      console.error('Server error:', err);
-      res.status(500).send('Server error');
-    }
+    res.status(500).send('Server error');
   }
 };
 
@@ -94,7 +77,6 @@ export const addCommentToVideo = async (req, res) => {
     const videoId = req.params.id;
     const { name, comment } = req.body;
 
-    // Validate required fields
     if (!videoId || !name || !comment) {
       return res.status(400).send('Video ID, name, and comment are required');
     }
@@ -106,23 +88,75 @@ export const addCommentToVideo = async (req, res) => {
       return res.status(404).send('Video not found');
     }
 
-    // Create a new comment object
     const newComment = {
-      id: uuidv4(), // Generate a unique ID for the comment
+      id: uuidv4(),
       name,
       comment,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      likes: 0
     };
 
-    // Add the new comment to the video's comments array
-    video.comments = video.comments || []; // Initialize comments array if it doesn't exist
+    video.comments = video.comments || [];
     video.comments.push(newComment);
     await writeVideosToFile(videos);
-
     res.status(201).json(newComment);
-    console.log("Added new comment:", newComment);
   } catch (err) {
-    console.error('Server error:', err);
+    res.status(500).send('Server error');
+  }
+};
+
+// Delete a comment from a video
+export const deleteCommentFromVideo = async (req, res) => {
+  try {
+    const videoId = req.params.id;
+    const commentId = req.params.commentId;
+
+    if (!videoId || !commentId) {
+      return res.status(400).send('Video ID and Comment ID are required');
+    }
+
+    const videos = await readVideosFromFile();
+    const video = videos.find(v => v.id === videoId);
+
+    if (!video) {
+      return res.status(404).send('Video not found');
+    }
+
+    const originalCommentCount = video.comments.length;
+    video.comments = video.comments.filter(comment => comment.id !== commentId);
+
+    if (video.comments.length === originalCommentCount) {
+      return res.status(404).send('Comment not found');
+    }
+
+    await writeVideosToFile(videos);
+    res.status(204).send(); // No content
+  } catch (err) {
+    res.status(500).send('Server error');
+  }
+};
+
+// Like a comment
+export const likeComment = async (req, res) => {
+  const { videoId, commentId } = req.params;
+
+  try {
+    const videos = await readVideosFromFile();
+    const video = videos.find(v => v.id === videoId);
+
+    if (!video) {
+      return res.status(404).send('Video not found');
+    }
+
+    const comment = video.comments.find(c => c.id === commentId);
+    if (!comment) {
+      return res.status(404).send('Comment not found');
+    }
+
+    comment.likes = (comment.likes || 0) + 1;
+    await writeVideosToFile(videos);
+    res.status(200).json(comment);
+  } catch (err) {
     res.status(500).send('Server error');
   }
 };

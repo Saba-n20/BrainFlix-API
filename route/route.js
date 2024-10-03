@@ -15,4 +15,10 @@ router.route('/videos/:id')
 // Define route for adding comments to a specific video
 router.post('/videos/:id/comments', controller.addCommentToVideo); 
 
+// Define route for liking a comment
+router.post('/videos/:videoId/comments/:commentId/like', controller.likeComment);
+
+// Define route for deleting a comment
+router.delete('/videos/:id/comments/:commentId', controller.deleteCommentFromVideo);
+
 export default router;
